@@ -1,0 +1,59 @@
+.App {
+  text-align: center;
+}
+
+.header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-wrap: wrap;
+  color: #fff;
+  position: relative;
+}
+
+#canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 100%;
+}
+
+.form {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 111;
+  background-color: rgba(255, 255, 255, 0.6);
+  display: flex;
+  flex-direction: column;
+  padding: 1em;
+}
+
+.urlInput {
+  border: 0;
+  margin: 1em 0;
+  padding: .5em;
+}
+
+.button {
+  border-radius: 0;
+  background-color: rgb(169, 171, 174);
+  color: black;
+  border: 1px solid;
+  padding: .5em;
+  cursor: pointer;
+  transition: .1s;
+}
+
+.button:disabled {
+  background-color: rgb(224, 225, 226);
+  opacity: .8;
+  cursor: default;
+}
+
+.button:hover {
+  background-color: rgb(224, 225, 226);
+}
