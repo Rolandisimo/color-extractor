@@ -1,24 +1,37 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { getColorsFromImage } from "./utils/requests";
-import { Block } from "./utils/Block";
+import { Block, BlockType } from "./utils/Block";
 import { Loader } from "./Loader";
+
 import styles from './App.module.css';
 
 function isDataInvalid(data) {
   return !data || !data.length || typeof data[0] !== "string";
 }
 
-const MAX_BLOCKS = 1000;
+function copyValueToClipboard(value) {
+  const target = document.createElement("input");
+  document.body.appendChild(target);
+  target.id = "target";
+  target.value = value;
+  target.select();
+  document.execCommand("copy");
+  document.body.removeChild(target);
+}
+
+const MAX_BLOCKS = 2000;
 
 function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [colors, setColors] = useState([]);
   const [blocks, setBlocks] = useState([]);
+  const [blockType, setBlockType] = useState();
+  const [selectedColor, setSelectedColor] = useState("");
   const [lastHoveredBlockIndex, setLastHoveredBlockIndex] = useState(-1);
   const [url, setUrl] = useState("");
-  const [canvasDimensions, setCanvasDimensions] = useState({
-    width: document.documentElement.clientWidth,
-    height: document.documentElement.clientHeight,
+  const [canvasContainerInfo, setCanvasContainerInfo] = useState({
+    width: 0,
+    height: 0,
   });
 
   const getColors = useCallback(() => {
@@ -46,33 +59,58 @@ function App() {
     });
   }, [url, isLoading]);
 
+  const measuredRef = useCallback(node => {
+    if (node !== null) {
+      setCanvasContainerInfo(node.getBoundingClientRect());
+    }
+  }, []);
+
   useEffect(() => {
     window.addEventListener("resize", () => {
-      setCanvasDimensions({
-        width: document.documentElement.clientWidth,
-        height: document.documentElement.clientHeight,
-      });
+      measuredRef(document.querySelector(`.${styles.header}`));
     });
-  }, [])
+  }, [measuredRef])
+
+  const selectColor = useCallback(() => {
+    const lastHoveredBlock = blocks[lastHoveredBlockIndex];
+    if (!lastHoveredBlock) {
+      return;
+    }
+    setSelectedColor(lastHoveredBlock.originalColor);
+    copyValueToClipboard(lastHoveredBlock.originalColor);
+    setTimeout(() => setSelectedColor(""), 1000);
+  }, [blocks, lastHoveredBlockIndex]);
 
   useEffect(() => {
-    const canvas = document.getElementById(styles.canvas);
+    const canvas = document.getElementById(styles.canvas)
     const ctx = canvas.getContext("2d")
     ctx.imageSmoothingEnabled = false;
-    ctx.clearRect(0, 0, canvasDimensions.width, canvasDimensions.height)
+    ctx.clearRect(0, 0, canvasContainerInfo.width, canvasContainerInfo.height)
 
-    const totalArea = canvasDimensions.width * canvasDimensions.height;
+    const totalArea = canvasContainerInfo.width * canvasContainerInfo.height;
     const colorArea = totalArea / (colors.length || 1);
-    const x = Math.sqrt(colorArea / (canvasDimensions.width * canvasDimensions.height));
 
-    let width = canvasDimensions.width * x;
-    let height = canvasDimensions.height * x;
+    let divideBy;
+    switch(blockType) {
+      case BlockType.circle: {
+        divideBy = canvasContainerInfo.width * canvasContainerInfo.width;
+        break;
+      }
+
+      default:
+        divideBy = canvasContainerInfo.width * canvasContainerInfo.height;
+    }
+
+    const ratio = Math.sqrt(colorArea / divideBy);
+
+    const width = Math.round(canvasContainerInfo.width * ratio);
+    const height = Math.round(canvasContainerInfo.height * ratio);
 
     let row = 1;
     let column = 1;
 
     setBlocks(colors.map((color) => {
-      const delta = column * width - canvasDimensions.width;
+      const delta = column * width - canvasContainerInfo.width;
       const hasReachedLastColumn = delta > 0;
       if (hasReachedLastColumn) {
         row++;
@@ -80,12 +118,13 @@ function App() {
       }
 
       const block = new Block({
-        x: (column - 1) * width,
-        y: (row - 1) * height,
+        column: column - 1,
+        row: row - 1,
         width,
         height,
         ctx,
         color,
+        type: blockType,
       });
       block.update();
       block.draw();
@@ -94,62 +133,90 @@ function App() {
 
       return block;
     }));
-  }, [colors, canvasDimensions]);
+  }, [colors, canvasContainerInfo, blockType]);
 
   const onMouseMove = useCallback((event) => {
     if (isLoading || !colors.length) {
       return;
     }
 
-    const x = event.clientX;
-    const y = event.clientY;
+    const x = Math.abs(event.clientX - canvasContainerInfo.left);
+    const y = Math.abs(event.clientY - canvasContainerInfo.top);
 
     const currentHoveredBlockIndex = blocks.findIndex((block) => {
       return (
-        block.x < x
-        && x < block.x
-        && block.y < y
-        && y < block.y
+        block.x <= x
+        && x <= block.x + block.width
+        && block.y <= y
+        && y <= block.y + block.height
       );
     });
 
-    console.count(currentHoveredBlockIndex)
-
-    if (currentHoveredBlockIndex === -1) {
+    if (currentHoveredBlockIndex === -1 || lastHoveredBlockIndex === currentHoveredBlockIndex) {
       return;
     }
-
-    if (lastHoveredBlockIndex === currentHoveredBlockIndex) {
-      return
-    }
-
-    setLastHoveredBlockIndex(currentHoveredBlockIndex);
 
     if (lastHoveredBlockIndex !== -1) {
       blocks[lastHoveredBlockIndex].onMouseExit();
     }
-
     blocks[currentHoveredBlockIndex].onMouseEnter();
 
-  }, [isLoading, colors, blocks, lastHoveredBlockIndex]);
+    setLastHoveredBlockIndex(currentHoveredBlockIndex);
+  }, [isLoading, colors, blocks, lastHoveredBlockIndex, canvasContainerInfo]);
 
   return (
     <div className={styles.App}>
       <div className={styles.form}>
-        <label htmlFor="url">Paste image url</label>
-        <input className={styles.urlInput} type="text" id="url" onChange={(e) => setUrl(e.target.value)} />
+        <input
+          id="url"
+          className={styles.urlInput}
+          type="text"
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="Image URL"
+        />
+        <select
+          id="url"
+          type="text"
+          onChange={(e) => {
+            console.log(e.target.value)
+            setBlockType(e.target.value)
+          }}
+          placeholder="Block type"
+        >
+          <option value={"Default"}>Default</option>
+          {Object.keys(BlockType).map((type) => {
+            return <option value={BlockType[type]} key={type}>{BlockType[type]}</option>
+          })}
+        </select>
         <button
           className={styles.button}
           onClick={() => getColors()}
           disabled={isLoading}
         >
-          Submit
+          Get Colors
         </button>
       </div>
-      <header className={styles.header}>
+      {blocks[lastHoveredBlockIndex] && (
+        <div className={styles.metaInfo} style={{ color: blocks[lastHoveredBlockIndex].originalColor }}>
+          {blocks[lastHoveredBlockIndex].originalColor}
+        </div>
+      )}
+      <header className={styles.header} ref={measuredRef}>
         {isLoading && <Loader />}
-        <canvas id={styles.canvas} {...canvasDimensions} onMouseMove={onMouseMove}></canvas>
+        <canvas
+          id={styles.canvas}
+          onMouseMove={onMouseMove}
+          width={canvasContainerInfo.width}
+          height={canvasContainerInfo.height}
+          onClick={selectColor}
+        />
       </header>
+      {selectedColor && (
+        <div className={styles.selectedColor} style={{ color: selectedColor }}>
+          {selectedColor}<br/>
+          <span className={styles.selectedColorSubtext}>copied to clipboard</span>
+        </div>
+      )}
     </div>
   );
 }

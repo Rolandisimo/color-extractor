@@ -1,20 +1,36 @@
+export const BlockType = {
+  circle: "Circle",
+};
+
 export class Block {
   constructor({
-    x,
-    y,
+    column,
+    row,
     width,
     height,
     color,
     ctx,
+    type,
   }) {
-    this.x = x;
-    this.y = y;
+    switch(type) {
+      case BlockType.circle: {
+        this.x = (column - 1) * width;
+        this.y = (row - 1) * width;
+        break;
+      }
+      default:
+        this.x = (column - 1) * width;
+        this.y = (row - 1) * height;
+    }
+
     this.width = width;
     this.height = height;
+    this.color = color;
+    this.type = type;
+
     this.originalWidth = width;
     this.originalHeight = height;
     this.originalColor = color;
-    this.color = color;
     this.ctx = ctx;
     this.isHovered = false;
   }
@@ -49,7 +65,14 @@ export class Block {
   draw() {
     this.clearBlock();
 
-    this.drawRectangle();
+    switch(this.type) {
+      case BlockType.circle: {
+        this.drawCircle();
+        break;
+      }
+      default:
+        this.drawRectangle();
+    }
   }
 
   drawCircle() {
@@ -74,16 +97,6 @@ export class Block {
   }
 
   clearBlock() {
-    // this.ctx.clearArc(
-    //   this.x,
-    //   this.y,
-    //   (this.height + this.width) / 2,
-    //   0,
-    //   2 * Math.PI,
-    // );
-
-    // this.ctx.globalCompositeOperation = 'destination-out'
-
     this.ctx.clearRect(
       this.x,
       this.y,
