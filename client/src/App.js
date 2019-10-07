@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { getColorsFromImage } from "./utils/requests";
 import { Block, BlockType } from "./utils/Block";
+import { hexToRgb } from "./utils/colors";
 import { Loader } from "./Loader";
 
 import styles from './App.module.css';
@@ -20,6 +21,7 @@ function copyValueToClipboard(value) {
 }
 
 const MAX_BLOCKS = 2000;
+const MAX_VALUE_FOR_LIGHT_COLOR = 225;
 
 function App() {
   const [isLoading, setIsLoading] = useState(false);
@@ -164,6 +166,21 @@ function App() {
     setLastHoveredBlockIndex(currentHoveredBlockIndex);
   }, [isLoading, colors, blocks, lastHoveredBlockIndex, canvasContainerInfo]);
 
+  const getContrastColor = useCallback((hex) => {
+    let color = "#fff";
+    const { r, g, b } = hexToRgb(hex)
+
+    if (
+      r > MAX_VALUE_FOR_LIGHT_COLOR
+      && g > MAX_VALUE_FOR_LIGHT_COLOR
+      && b > MAX_VALUE_FOR_LIGHT_COLOR
+    ) {
+      color = "#000";
+    }
+
+    return color;
+  }, [])
+
   return (
     <div className={styles.App}>
       <div className={styles.form}>
@@ -212,7 +229,10 @@ function App() {
         />
       </header>
       {selectedColor && (
-        <div className={styles.selectedColor} style={{ color: selectedColor }}>
+        <div
+          className={styles.selectedColor}
+          style={{ backgroundColor: selectedColor, color: getContrastColor(selectedColor) }}
+        >
           {selectedColor}<br/>
           <span className={styles.selectedColorSubtext}>copied to clipboard</span>
         </div>
