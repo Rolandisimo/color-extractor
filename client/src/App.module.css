@@ -4,7 +4,8 @@
 
 .header {
   background-color: #282c34;
-  min-height: 100vh;
+  height: 80%;
+  width: 80%;
   display: flex;
   flex-wrap: wrap;
   color: #fff;
