@@ -28,8 +28,6 @@ export class Block {
     this.color = color;
     this.type = type;
 
-    this.originalWidth = width;
-    this.originalHeight = height;
     this.originalColor = color;
     this.ctx = ctx;
     this.isHovered = false;
@@ -87,6 +85,7 @@ export class Block {
     this.ctx.fill();
     this.ctx.closePath();
   }
+
   drawRectangle() {
     this.ctx.fillRect(
       this.x,

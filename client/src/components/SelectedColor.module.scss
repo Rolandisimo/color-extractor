@@ -1,0 +1,46 @@
+
+@import "../consts.scss";
+
+.selectedColor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  animation: flyIn 1s;
+  opacity: 0;
+  font-size: 12em;
+  flex-direction: column;
+  z-index: 9999;
+}
+
+.selectedColorSubtext {
+  font-size: 30%;
+}
+
+@keyframes flyIn {
+  0% {
+    opacity: 0;
+  }
+
+  20% {
+    opacity: 1;
+  }
+
+  80% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (max-width: $mobileVersionBreakpoint) {
+  .selectedColor {
+    font-size: calc(5em + 1vw);
+  }
+}

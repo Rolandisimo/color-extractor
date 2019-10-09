@@ -1,65 +1,21 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
-import { getColorsFromImage } from "./utils/requests";
 import { Block, BlockType } from "./utils/Block";
-import { hexToRgb } from "./utils/colors";
-import { Loader } from "./Loader";
+import { copyValueToClipboard } from "./utils/copyValueToClipboard";
+import { Loader } from "./components/Loader";
+import { Forms } from "./components/Forms";
+import { SelectedColor } from "./components/SelectedColor";
+import { MetaInfo } from "./components/MetaInfo";
 
-import styles from './App.module.css';
+import styles from './App.module.scss';
 
-function isDataInvalid(data) {
-  return !data || !data.length || typeof data[0] !== "string";
-}
-
-function copyValueToClipboard(value) {
-  const target = document.createElement("input");
-  document.body.appendChild(target);
-  target.id = "target";
-  target.value = value;
-  target.select();
-  document.execCommand("copy");
-  document.body.removeChild(target);
-}
-
-const MAX_BLOCKS = 2000;
-const MAX_VALUE_FOR_LIGHT_COLOR = 225;
-
-function App() {
+const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [colors, setColors] = useState([]);
   const [blocks, setBlocks] = useState([]);
   const [blockType, setBlockType] = useState();
   const [selectedColor, setSelectedColor] = useState("");
   const [lastHoveredBlockIndex, setLastHoveredBlockIndex] = useState(-1);
-  const [url, setUrl] = useState("");
-  const [canvasContainerInfo, setCanvasContainerInfo] = useState({
-    width: 0,
-    height: 0,
-  });
-
-  const getColors = useCallback(() => {
-    if (!url || isLoading) {
-      return Promise.resolve();
-    };
-
-    setColors([])
-    setIsLoading(true);
-
-    return new Promise(async (resolve, reject) => {
-      try {
-        const response = await getColorsFromImage(url);
-        const data = await response.json()
-
-        setIsLoading(false);
-
-        if (isDataInvalid(data)) {
-          return reject();
-        }
-
-        setColors(data.slice(0, MAX_BLOCKS + 1));
-        resolve();
-      } catch {}
-    });
-  }, [url, isLoading]);
+  const [canvasContainerInfo, setCanvasContainerInfo] = useState({ width: 0, height: 0 });
 
   const measuredRef = useCallback(node => {
     if (node !== null) {
@@ -69,7 +25,7 @@ function App() {
 
   useEffect(() => {
     window.addEventListener("resize", () => {
-      measuredRef(document.querySelector(`.${styles.header}`));
+      measuredRef(document.querySelector(`.${styles.canvasContainer}`));
     });
   }, [measuredRef])
 
@@ -86,7 +42,6 @@ function App() {
   useEffect(() => {
     const canvas = document.getElementById(styles.canvas)
     const ctx = canvas.getContext("2d")
-    ctx.imageSmoothingEnabled = false;
     ctx.clearRect(0, 0, canvasContainerInfo.width, canvasContainerInfo.height)
 
     const totalArea = canvasContainerInfo.width * canvasContainerInfo.height;
@@ -104,7 +59,6 @@ function App() {
     }
 
     const ratio = Math.sqrt(colorArea / divideBy);
-
     const width = Math.round(canvasContainerInfo.width * ratio);
     const height = Math.round(canvasContainerInfo.height * ratio);
 
@@ -112,8 +66,7 @@ function App() {
     let column = 1;
 
     setBlocks(colors.map((color) => {
-      const delta = column * width - canvasContainerInfo.width;
-      const hasReachedLastColumn = delta > 0;
+      const hasReachedLastColumn = column * width > canvasContainerInfo.width;
       if (hasReachedLastColumn) {
         row++;
         column = 1;
@@ -166,77 +119,29 @@ function App() {
     setLastHoveredBlockIndex(currentHoveredBlockIndex);
   }, [isLoading, colors, blocks, lastHoveredBlockIndex, canvasContainerInfo]);
 
-  const getContrastColor = useCallback((hex) => {
-    let color = "#fff";
-    const { r, g, b } = hexToRgb(hex)
-
-    if (
-      r > MAX_VALUE_FOR_LIGHT_COLOR
-      && g > MAX_VALUE_FOR_LIGHT_COLOR
-      && b > MAX_VALUE_FOR_LIGHT_COLOR
-    ) {
-      color = "#000";
-    }
-
-    return color;
-  }, [])
-
   return (
-    <div className={styles.App}>
-      <div className={styles.form}>
-        <input
-          id="url"
-          className={styles.urlInput}
-          type="text"
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="Image URL"
-        />
-        <select
-          id="url"
-          type="text"
-          onChange={(e) => {
-            console.log(e.target.value)
-            setBlockType(e.target.value)
-          }}
-          placeholder="Block type"
-        >
-          <option value={"Default"}>Default</option>
-          {Object.keys(BlockType).map((type) => {
-            return <option value={BlockType[type]} key={type}>{BlockType[type]}</option>
-          })}
-        </select>
-        <button
-          className={styles.button}
-          onClick={() => getColors()}
-          disabled={isLoading}
-        >
-          Get Colors
-        </button>
-      </div>
+    <div className={styles.container}>
+      <Forms
+        isLoading={isLoading}
+        setIsLoading={setIsLoading}
+        setColors={setColors}
+        setBlockType={setBlockType}
+      />
       {blocks[lastHoveredBlockIndex] && (
-        <div className={styles.metaInfo} style={{ color: blocks[lastHoveredBlockIndex].originalColor }}>
-          {blocks[lastHoveredBlockIndex].originalColor}
-        </div>
+        <MetaInfo color={blocks[lastHoveredBlockIndex].originalColor} />
       )}
-      <header className={styles.header} ref={measuredRef}>
+
+      <div className={styles.canvasContainer} ref={measuredRef}>
         {isLoading && <Loader />}
         <canvas
           id={styles.canvas}
           onMouseMove={onMouseMove}
+          onClick={selectColor}
           width={canvasContainerInfo.width}
           height={canvasContainerInfo.height}
-          onClick={selectColor}
         />
-      </header>
-      {selectedColor && (
-        <div
-          className={styles.selectedColor}
-          style={{ backgroundColor: selectedColor, color: getContrastColor(selectedColor) }}
-        >
-          {selectedColor}<br/>
-          <span className={styles.selectedColorSubtext}>copied to clipboard</span>
-        </div>
-      )}
+      </div>
+      <SelectedColor selectedColor={selectedColor} />
     </div>
   );
 }

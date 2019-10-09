@@ -11,7 +11,7 @@ import sys
 def requestObject(image_url):
   temp_req = { "status": 403 }
   retry_counter = 1
-  req = Request(image_url, headers={'User-Agent': 'Mozilla/5.0'})
+  req = Request(image_url, headers={'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/77.0.3865.90 Safari/537.36'})
   res = None
 
   while((temp_req['status'] != 200) and (retry_counter <= 10)):
@@ -19,7 +19,7 @@ def requestObject(image_url):
       res = urlopen(req)
       temp_req = { "status": 200 }
     except:
-      time.sleep(4)
+      time.sleep(2)
     retry_counter = retry_counter + 1
 
   return res

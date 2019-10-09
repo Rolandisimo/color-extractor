@@ -1,6 +1,6 @@
 export function componentToHex(c) {
   var hex = c.toString(16);
-  return hex.length == 1 ? "0" + hex : hex;
+  return hex.length === 1 ? "0" + hex : hex;
 }
 
 export function rgbToHex(r, g, b) {
@@ -20,3 +20,19 @@ export function hexToRgb(hex) {
     b: parseInt(result[3], 16)
   } : null;
 }
+
+const MAX_VALUE_FOR_LIGHT_COLOR = 225;
+export const getContrastColor = (hex) => {
+  let color = "#fff";
+  const { r, g, b } = hexToRgb(hex)
+
+  if (
+    r > MAX_VALUE_FOR_LIGHT_COLOR
+    && g > MAX_VALUE_FOR_LIGHT_COLOR
+    && b > MAX_VALUE_FOR_LIGHT_COLOR
+  ) {
+    color = "#000";
+  }
+
+  return color;
+};
