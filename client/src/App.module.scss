@@ -7,17 +7,17 @@
 }
 
 .canvasContainer {
-  background-color: #282c34;
+  background-color: #2d3436;
   display: flex;
   flex-wrap: wrap;
   color: #fff;
-  width: 90%;
-  height: calc(90% - 4.5em);
+  width: 100%;
+  height: calc(100% - 4.5em);
   transform: translate(-50%, 0%);
-  top: 0;
+  top: 4.5em;
   left: 50%;
   position: relative;
-  box-shadow: 0 0 0.7em 0.2em rgba(0, 0, 0, 0.7);
+  box-shadow: 0 0 0.7em 0.1em rgba(45, 52, 54, .5);
 }
 
 #canvas {
@@ -26,11 +26,4 @@
   left: 0;
   bottom: 0;
   right: 0;
-}
-
-@media (max-width: $mobileVersionBreakpoint) {
-  .canvasContainer {
-    width: 100%;
-    height: calc(100% - 4.5em);
-  }
 }

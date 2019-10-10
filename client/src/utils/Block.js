@@ -14,13 +14,13 @@ export class Block {
   }) {
     switch(type) {
       case BlockType.circle: {
-        this.x = (column - 1) * width;
-        this.y = (row - 1) * width;
+        this.x = column * width;
+        this.y = row * width;
         break;
       }
       default:
-        this.x = (column - 1) * width;
-        this.y = (row - 1) * height;
+        this.x = column * width;
+        this.y = row * height;
     }
 
     this.width = width;

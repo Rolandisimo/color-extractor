@@ -2,9 +2,9 @@ import React, { useState, useEffect, useCallback, memo } from 'react';
 import { Block, BlockType } from "./utils/Block";
 import { copyValueToClipboard } from "./utils/copyValueToClipboard";
 import { Loader } from "./components/Loader";
-import { Forms } from "./components/Forms";
 import { SelectedColor } from "./components/SelectedColor";
 import { MetaInfo } from "./components/MetaInfo";
+import { Controls } from "./components/Controls";
 
 import styles from './App.module.scss';
 
@@ -13,6 +13,7 @@ const App = () => {
   const [colors, setColors] = useState([]);
   const [blocks, setBlocks] = useState([]);
   const [blockType, setBlockType] = useState();
+  const [numberOfBlocks, setNumberOfBlocks] = useState(2000);
   const [selectedColor, setSelectedColor] = useState("");
   const [lastHoveredBlockIndex, setLastHoveredBlockIndex] = useState(-1);
   const [canvasContainerInfo, setCanvasContainerInfo] = useState({ width: 0, height: 0 });
@@ -45,7 +46,7 @@ const App = () => {
     ctx.clearRect(0, 0, canvasContainerInfo.width, canvasContainerInfo.height)
 
     const totalArea = canvasContainerInfo.width * canvasContainerInfo.height;
-    const colorArea = totalArea / (colors.length || 1);
+    const colorArea = totalArea / (numberOfBlocks || 1);
 
     let divideBy;
     switch(blockType) {
@@ -65,7 +66,7 @@ const App = () => {
     let row = 1;
     let column = 1;
 
-    setBlocks(colors.map((color) => {
+    setBlocks(colors.slice(0, numberOfBlocks).map((color) => {
       const hasReachedLastColumn = column * width > canvasContainerInfo.width;
       if (hasReachedLastColumn) {
         row++;
@@ -88,10 +89,10 @@ const App = () => {
 
       return block;
     }));
-  }, [colors, canvasContainerInfo, blockType]);
+  }, [colors, canvasContainerInfo, blockType, numberOfBlocks]);
 
   const onMouseMove = useCallback((event) => {
-    if (isLoading || !colors.length) {
+    if (isLoading || !numberOfBlocks) {
       return;
     }
 
@@ -111,21 +112,25 @@ const App = () => {
       return;
     }
 
-    if (lastHoveredBlockIndex !== -1) {
+    if (lastHoveredBlockIndex !== -1 && blocks[lastHoveredBlockIndex]) {
       blocks[lastHoveredBlockIndex].onMouseExit();
     }
-    blocks[currentHoveredBlockIndex].onMouseEnter();
+    if (blocks[currentHoveredBlockIndex]) {
+      blocks[currentHoveredBlockIndex].onMouseEnter();
+    }
 
     setLastHoveredBlockIndex(currentHoveredBlockIndex);
-  }, [isLoading, colors, blocks, lastHoveredBlockIndex, canvasContainerInfo]);
+  }, [isLoading, blocks, lastHoveredBlockIndex, canvasContainerInfo, numberOfBlocks]);
 
   return (
     <div className={styles.container}>
-      <Forms
+      <Controls
         isLoading={isLoading}
         setIsLoading={setIsLoading}
         setColors={setColors}
         setBlockType={setBlockType}
+        setNumberOfBlocks={setNumberOfBlocks}
+        numberOfBlocks={numberOfBlocks}
       />
       {blocks[lastHoveredBlockIndex] && (
         <MetaInfo color={blocks[lastHoveredBlockIndex].originalColor} />

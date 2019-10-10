@@ -1,0 +1,21 @@
+{
+  "name": "express-compression",
+  "version": "1.0.0",
+  "description": "Extract all colors from any image",
+  "scripts": {
+    "start": "concurrently 'cd client && yarn start' 'cd server && npm run start' "
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Rolandisimo/color-extractor.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Rolandisimo/color-extractor/issues"
+  },
+  "homepage": "https://github.com/Rolandisimo/color-extractor#readme",
+  "dependencies": {
+    "concurrently": "^5.0.0"
+  }
+}

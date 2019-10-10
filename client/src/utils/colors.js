@@ -21,15 +21,15 @@ export function hexToRgb(hex) {
   } : null;
 }
 
-const MAX_VALUE_FOR_LIGHT_COLOR = 225;
+const MAX_VALUE_FOR_LIGHT_COLOR = 210;
 export const getContrastColor = (hex) => {
   let color = "#fff";
   const { r, g, b } = hexToRgb(hex)
 
   if (
-    r > MAX_VALUE_FOR_LIGHT_COLOR
-    && g > MAX_VALUE_FOR_LIGHT_COLOR
-    && b > MAX_VALUE_FOR_LIGHT_COLOR
+    r >= MAX_VALUE_FOR_LIGHT_COLOR
+    && g >= MAX_VALUE_FOR_LIGHT_COLOR
+    && b >= MAX_VALUE_FOR_LIGHT_COLOR
   ) {
     color = "#000";
   }

@@ -5,11 +5,10 @@ const child_process = require("child_process");
 const morgan = require("morgan");
 const morganBody = require("morgan-body");
 const cors = require("cors");
+const env = require("./config");
 const formatStringAsStringifiedJson = require("./utils");
 
 const app = express()
-
-const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(bodyParser.urlencoded({
@@ -18,7 +17,7 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 app.use(compression())
 app.use(morgan("combined"));
-if (process.env.NODE_ENV === "development") {
+if (env.NODE_ENV === "development") {
   morganBody(app);
 }
 
@@ -40,6 +39,6 @@ app.use("/colors", (req, res) => {
   })
 })
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`)
+app.listen(env.PORT, () => {
+  console.log(`Server running on port ${env.PORT}`)
 })
