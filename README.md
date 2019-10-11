@@ -17,10 +17,6 @@
 - Installed `virtualenv` for starting the python scripts in a virtual environment
 
 ## Usage
-For development:
-- Start client by running `./client.development.sh`
-- Start server by running `./server.development.sh`
-
-For production [WIP]:
-- `./client.production.sh`
-- `./server.production.sh`
+- Clone repo
+- Run `npm run start` from the root to start the server and the client simultaneously
+- Alternatively, `cd client && yarn start` and `cd server && npm run start`
