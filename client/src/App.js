@@ -95,8 +95,6 @@ const App = () => {
     const width = canvasContainerInfo.width * ratio;
     const height = canvasContainerInfo.height * ratio;
 
-    console.log({ length: colors.length, colorArea, width, height })
-
     setBlocks(getBlockPositions(width, height).map((positionInfo) => {
       const block = new Block({
         ...positionInfo,
