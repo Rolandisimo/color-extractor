@@ -1,7 +1,3 @@
-export const BlockType = {
-  circle: "Circle",
-};
-
 export class Block {
   constructor({
     column,
@@ -10,23 +6,12 @@ export class Block {
     height,
     color,
     ctx,
-    type,
   }) {
-    switch(type) {
-      case BlockType.circle: {
-        this.x = column * width;
-        this.y = row * width;
-        break;
-      }
-      default:
-        this.x = column * width;
-        this.y = row * height;
-    }
-
+    this.x = column * width;
+    this.y = row * height;
     this.width = width;
     this.height = height;
     this.color = color;
-    this.type = type;
 
     this.originalColor = color;
     this.ctx = ctx;
@@ -62,28 +47,7 @@ export class Block {
 
   draw() {
     this.clearBlock();
-
-    switch(this.type) {
-      case BlockType.circle: {
-        this.drawCircle();
-        break;
-      }
-      default:
-        this.drawRectangle();
-    }
-  }
-
-  drawCircle() {
-    this.ctx.beginPath();
-    this.ctx.arc(
-      this.x + (this.width / 2),
-      this.y + (this.width / 2),
-      this.width / 2,
-      0,
-      2 * Math.PI,
-    );
-    this.ctx.fill();
-    this.ctx.closePath();
+    this.drawRectangle();
   }
 
   drawRectangle() {

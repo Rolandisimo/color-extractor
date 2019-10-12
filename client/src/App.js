@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback, memo } from 'react';
-import { Block, BlockType } from "./utils/Block";
+import throttle from "lodash.throttle";
+import { Block } from "./utils/Block";
 import { copyValueToClipboard } from "./utils/copyValueToClipboard";
 import { Loader } from "./components/Loader";
 import { SelectedColor } from "./components/SelectedColor";
 import { MetaInfo } from "./components/MetaInfo";
 import { Controls } from "./components/Controls";
+import { Tutorial } from "./components/Tutorial";
 
 import styles from './App.module.scss';
 
@@ -12,7 +14,6 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [colors, setColors] = useState([]);
   const [blocks, setBlocks] = useState([]);
-  const [blockType, setBlockType] = useState();
   const [numberOfBlocks, setNumberOfBlocks] = useState(2000);
   const [selectedColor, setSelectedColor] = useState("");
   const [lastHoveredBlockIndex, setLastHoveredBlockIndex] = useState(-1);
@@ -25,9 +26,12 @@ const App = () => {
   }, []);
 
   useEffect(() => {
-    window.addEventListener("resize", () => {
+    const callback = throttle(() => {
       measuredRef(document.querySelector(`.${styles.canvasContainer}`));
-    });
+    }, 1000, { leading: true, trailiing: true });
+    window.addEventListener("resize", callback);
+
+    return () => window.removeEventListener("resize", callback)
   }, [measuredRef])
 
   const selectColor = useCallback(() => {
@@ -40,56 +44,69 @@ const App = () => {
     setTimeout(() => setSelectedColor(""), 1000);
   }, [blocks, lastHoveredBlockIndex]);
 
+  const getBlockPositions = useCallback((width, height) => {
+    const usableColors = colors.slice(0, numberOfBlocks);
+
+    let row = 0;
+    let column = 0;
+
+    const colorBlocks = [];
+
+    for (let color of usableColors) {
+      const deltaOverflow = (column * width) - canvasContainerInfo.width;
+      const hasReachedLastColumn = deltaOverflow >= 0;
+
+      if (deltaOverflow > 0) {
+        const newWidth = canvasContainerInfo.width / (column || 1);
+        const decreaseRatio = width / newWidth;
+        return getBlockPositions(
+          newWidth,
+          height / decreaseRatio,
+        );
+      }
+
+      if (hasReachedLastColumn) {
+        row++;
+        column = 0;
+      }
+
+      colorBlocks.push({
+        column,
+        row,
+        width: Math.floor(width),
+        height: Math.floor(height),
+        color,
+      });
+
+      column++;
+    }
+
+    return colorBlocks;
+  }, [colors, numberOfBlocks, canvasContainerInfo]);
+
   useEffect(() => {
     const canvas = document.getElementById(styles.canvas)
     const ctx = canvas.getContext("2d")
     ctx.clearRect(0, 0, canvasContainerInfo.width, canvasContainerInfo.height)
 
     const totalArea = canvasContainerInfo.width * canvasContainerInfo.height;
-    const colorArea = totalArea / (numberOfBlocks || 1);
+    const colorArea = totalArea / Math.min(colors.length || 1, numberOfBlocks);
+    const ratio = Math.sqrt(colorArea / totalArea);
+    const width = canvasContainerInfo.width * ratio;
+    const height = canvasContainerInfo.height * ratio;
 
-    let divideBy;
-    switch(blockType) {
-      case BlockType.circle: {
-        divideBy = canvasContainerInfo.width * canvasContainerInfo.width;
-        break;
-      }
+    console.log({ length: colors.length, colorArea, width, height })
 
-      default:
-        divideBy = canvasContainerInfo.width * canvasContainerInfo.height;
-    }
-
-    const ratio = Math.sqrt(colorArea / divideBy);
-    const width = Math.round(canvasContainerInfo.width * ratio);
-    const height = Math.round(canvasContainerInfo.height * ratio);
-
-    let row = 1;
-    let column = 1;
-
-    setBlocks(colors.slice(0, numberOfBlocks).map((color) => {
-      const hasReachedLastColumn = column * width > canvasContainerInfo.width;
-      if (hasReachedLastColumn) {
-        row++;
-        column = 1;
-      }
-
+    setBlocks(getBlockPositions(width, height).map((positionInfo) => {
       const block = new Block({
-        column: column - 1,
-        row: row - 1,
-        width,
-        height,
+        ...positionInfo,
         ctx,
-        color,
-        type: blockType,
       });
       block.update();
       block.draw();
-
-      column++;
-
       return block;
     }));
-  }, [colors, canvasContainerInfo, blockType, numberOfBlocks]);
+  }, [colors, canvasContainerInfo, numberOfBlocks, getBlockPositions]);
 
   const onMouseMove = useCallback((event) => {
     if (isLoading || !numberOfBlocks) {
@@ -128,16 +145,19 @@ const App = () => {
         isLoading={isLoading}
         setIsLoading={setIsLoading}
         setColors={setColors}
-        setBlockType={setBlockType}
         setNumberOfBlocks={setNumberOfBlocks}
         numberOfBlocks={numberOfBlocks}
       />
       {blocks[lastHoveredBlockIndex] && (
-        <MetaInfo color={blocks[lastHoveredBlockIndex].originalColor} />
+        <MetaInfo
+          color={blocks[lastHoveredBlockIndex].originalColor}
+          numberOfColors={colors.length}
+        />
       )}
 
       <div className={styles.canvasContainer} ref={measuredRef}>
         {isLoading && <Loader />}
+        <Tutorial />
         <canvas
           id={styles.canvas}
           onMouseMove={onMouseMove}

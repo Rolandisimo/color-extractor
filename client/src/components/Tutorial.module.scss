@@ -1,0 +1,17 @@
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #95a5a6;
+  width: 100%;
+  font-size: 2em;
+  opacity: .5;
+  padding: 2em 1em;
+}
+
+.innerContainer {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+
+}

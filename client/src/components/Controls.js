@@ -1,6 +1,5 @@
-import React, { memo, useState, useCallback } from 'react';
+import React, { memo, useState, useCallback, useEffect } from 'react';
 import { getColorsFromImage } from "../utils/requests";
-import { BlockType } from "../utils/Block";
 import { MenuIcon } from "../icons/Menu.js"
 
 import cx from "classnames";
@@ -14,12 +13,22 @@ export const Controls = memo(({
   isLoading,
   setIsLoading,
   setColors,
-  setBlockType,
   numberOfBlocks,
   setNumberOfBlocks,
 }) => {
   const [url, setUrl] = useState("");
-  const [isActive, toggleState] = useState(false);
+  const [isActive, toggleIsActive] = useState(false);
+
+  useEffect(() => {
+    const callback = (e) => {
+      if (e.code === "Escape" || e.key === "Escape" || e.keyCode === 27) {
+        toggleIsActive((state) => !state);
+      }
+    };
+    document.addEventListener("keydown", callback);
+
+    return () => document.removeEventListener("keydown", callback);
+  }, [])
 
   const getColors = useCallback(() => {
     if (!url || isLoading) {
@@ -55,7 +64,7 @@ export const Controls = memo(({
     <div className={cx(styles.container, { [styles.active]: isActive } )} >
       <div
         className={cx(styles.menuIconContainer, { [styles.active]: isActive })}
-        onClick={() => toggleState(!isActive)}
+        onClick={() => toggleIsActive(!isActive)}
       >
         <MenuIcon />
       </div>
@@ -75,15 +84,6 @@ export const Controls = memo(({
           onChange={(e) => setNumberOfBlocks(+e.target.value)}
           placeholder="Input the number of color blocks you want displayed"
         />
-        <select
-          className={styles.blockType}
-          onChange={(e) => setBlockType(e.target.value)}
-        >
-          <option value={"Default"}>Default</option>
-          {Object.keys(BlockType).map((type) => {
-            return <option value={BlockType[type]} key={type}>{BlockType[type]}</option>
-          })}
-        </select>
         <button
           className={styles.button}
           onClick={() => getColors()}
