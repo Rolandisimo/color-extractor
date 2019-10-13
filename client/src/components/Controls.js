@@ -1,8 +1,10 @@
 import React, { memo, useState, useCallback, useEffect } from 'react';
-import { getColorsFromImage } from "../utils/requests";
-import { MenuIcon } from "../icons/Menu.js"
-
 import cx from "classnames";
+import { getColorsFromImage } from "../utils/requests";
+import { MenuIcon } from "../icons/Menu"
+import { FormGroup } from "./FormGroup/FormGroup"
+import { Input } from "./FormGroup/Input"
+
 import styles from './Controls.module.scss';
 
 function isDataInvalid(data) {
@@ -70,27 +72,33 @@ export const Controls = memo(({
       </div>
 
       <div className={styles.controls}>
-        <input
-          className={styles.urlInput}
-          type="text"
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="Image URL"
-        />
-        <input
-          className={styles.numberOfBlocksInput}
-          type="number"
-          min={0}
-          value={numberOfBlocks}
-          onChange={(e) => setNumberOfBlocks(+e.target.value)}
-          placeholder="Input the number of color blocks you want displayed"
-        />
-        <button
-          className={styles.button}
-          onClick={() => getColors()}
-          disabled={isLoading}
-        >
-          Get Colors
-        </button>
+        <FormGroup>
+          <Input
+            htmlFor={"image-url"}
+            onChange={(e) => setUrl(e.target.value)}
+            label={"Image URL"}
+          />
+        </FormGroup>
+        <FormGroup>
+          <Input
+            htmlFor={"image-url"}
+            onChange={(e) => setNumberOfBlocks(+e.target.value)}
+            label={"Number of colors"}
+            placeholder={"How many colors to display"}
+            min={0}
+            type="number"
+            value={numberOfBlocks}
+          />
+        </FormGroup>
+        <FormGroup>
+          <button
+            className={styles.button}
+            onClick={getColors}
+            disabled={isLoading}
+          >
+            Extract colors
+          </button>
+        </FormGroup>
       </div>
     </div>
   );

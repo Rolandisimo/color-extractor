@@ -14,7 +14,7 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [colors, setColors] = useState([]);
   const [blocks, setBlocks] = useState([]);
-  const [numberOfBlocks, setNumberOfBlocks] = useState(2000);
+  const [numberOfBlocks, setNumberOfBlocks] = useState(100);
   const [selectedColor, setSelectedColor] = useState("");
   const [lastHoveredBlockIndex, setLastHoveredBlockIndex] = useState(-1);
   const [canvasContainerInfo, setCanvasContainerInfo] = useState({ width: 0, height: 0 });
@@ -44,8 +44,9 @@ const App = () => {
     setTimeout(() => setSelectedColor(""), 1000);
   }, [blocks, lastHoveredBlockIndex]);
 
-  const getBlockPositions = useCallback((width, height) => {
+  const getBlockPositions = useCallback((width, height, hasRecalculated) => {
     const usableColors = colors.slice(0, numberOfBlocks);
+
 
     let row = 0;
     let column = 0;
@@ -53,19 +54,19 @@ const App = () => {
     const colorBlocks = [];
 
     for (let color of usableColors) {
-      const deltaOverflow = (column * width) - canvasContainerInfo.width;
-      const hasReachedLastColumn = deltaOverflow >= 0;
+      const deltaOverflow = ((column + 1) * width) - canvasContainerInfo.width;
 
-      if (deltaOverflow > 0) {
-        const newWidth = canvasContainerInfo.width / (column || 1);
+      if (!hasRecalculated && deltaOverflow > 0) {
+        const newWidth = canvasContainerInfo.width / (column + 1);
         const decreaseRatio = width / newWidth;
         return getBlockPositions(
           newWidth,
           height / decreaseRatio,
+          true,
         );
       }
 
-      if (hasReachedLastColumn) {
+      if (deltaOverflow > 0) {
         row++;
         column = 0;
       }
@@ -73,8 +74,8 @@ const App = () => {
       colorBlocks.push({
         column,
         row,
-        width: Math.floor(width),
-        height: Math.floor(height),
+        width,
+        height,
         color,
       });
 

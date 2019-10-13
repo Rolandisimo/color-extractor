@@ -1,0 +1,32 @@
+$darkColor: #395173;
+$mainColor: #42beb6;
+$placeholderColor: rgba(29, 34, 71, 0.3);
+
+.formGroup {
+  position: relative;
+  height: 3rem;
+  max-width: 80%;
+  margin: .5rem 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-direction: column;
+}
+.input {
+  font-weight: 100;
+  outline: none;
+  height: 100%;
+  width: 100%;
+  text-align: center;
+  transition: .2s;
+  position: relative;
+  border: none;
+  border-bottom: 1px solid lighten($darkColor, 50%);
+  border-radius: 0;
+  padding: 0.3em 0.7em;
+  box-sizing: border-box;
+}
+
+.hidden {
+  opacity: 0;
+}
