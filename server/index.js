@@ -22,7 +22,7 @@ if (env.NODE_ENV === "development") {
 }
 
 app.use("/colors", (req, res) => {
-  child_process.exec(`cd colors_env && source bin/activate && python get_image_colors.py ${req.body.url}`, {
+  child_process.exec(`cd colors_env && source bin/activate && python3 get_image_colors.py ${req.body.url}`, {
     maxBuffer: 1024 * 10000,
     encoding: "buffer",
   }, (error, stdout, stderr) => {
